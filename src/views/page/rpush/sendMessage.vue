@@ -215,6 +215,7 @@ export default {
       }
       this.queryConfig()
       this.queryGroup()
+      this.initParam()
     },
     // 获取平台列表
     async platformList () {
@@ -240,6 +241,7 @@ export default {
       let groupRes = await queryGroup(this.menuListActive.id, {
         pageSize: 2147483647
       })
+      this.model.groupIds = []
       this.groups = groupRes.data.dataList
     },
     async sendMessage () {
@@ -256,6 +258,29 @@ export default {
         message: res.data || '服务器异常',
         type: 'success'
       })
+    },
+    initParam () {
+      this.sendMessageParam = {
+        platformParam: {
+          /*
+          EMAIL: {
+            configIds: [],
+            sendTos: [],
+            param: {}
+          }
+          */
+        },
+        title: '',
+        content: ''
+      }
+
+      this.inputReceiverId = ''// 当前新增的接收人
+      this.addReceiverIds = [] // 新增的接收人
+      this.model = {
+        configIds: [],
+        groupIds: [],
+        sendTos: []
+      }
     }
   }
 }
