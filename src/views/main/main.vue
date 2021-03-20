@@ -74,7 +74,7 @@ export default {
   z-index: 5;
   box-shadow: 2px 0 2px #ccc;
   height: 100%;
-  background-color: rgba(29, 35, 52, 1);
+  background-color: #1d2334;
 }
 .my_main_box {
   padding: 0;

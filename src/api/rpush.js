@@ -166,3 +166,11 @@ export function sendMessage (data) {
     data: data
   })
 }
+
+export function queryHisDetail (data) {
+  return fetch({
+    url: '/rpush-message-his-detail',
+    method: 'post',
+    data: data
+  })
+}

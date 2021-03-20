@@ -2,7 +2,12 @@
   <div class="taskManagement">
     <!-- 头部 -->
     <div class="taskManagement_header">
-      <div class="title">发消息</div>
+      <div class="title">
+        <el-row>
+          <el-col :span="22">发消息</el-col>
+          <el-col :span="2"><el-button type="text" @click="doShowHisDetailDialog">查看消息日志</el-button></el-col>
+        </el-row>
+      </div>
     </div>
     <!-- 内容 -->
     <div class="taskManagement_container">
@@ -126,6 +131,12 @@
         </div>
       </div>
     </div>
+    <hisDetailDialog
+      :dialogVisible=showHisDetailDialog
+      :requestNo="requestNo"
+      :platform="menuListActive.id"
+      @closed="closeHisDetail"
+    />
   </div>
 </template>
 <script>
@@ -141,6 +152,7 @@ import {Message} from "element-ui";
 export default {
   name: 'groupManagement',
   components: {
+    hisDetailDialog: () => import('./component/hisDetailDialog.vue'),
   },
   data() {
     return {
@@ -169,13 +181,18 @@ export default {
         },
         title: '',
         content: ''
-      }
+      },
+      showHisDetailDialog: false,
+      requestNo: ''
     }
   },
   async mounted () {
     await this.platformList()
   },
   methods: {
+    closeHisDetail () {
+      this.showHisDetailDialog = false
+    },
     handleAddReceiverId () {
       this.$nextTick(()=>{
         this.$refs.inputReceiverId.focus()
@@ -246,18 +263,37 @@ export default {
     },
     async sendMessage () {
       if (!this.model.configIds.length) {
-        Message.error("请选择至少一个配置")
+        Message.error('请选择至少一个配置')
         return
       }
-      this.model.sendTos.push.apply(this.model.sendTos, this.addReceiverIds);
+      this.model.sendTos.push.apply(this.model.sendTos, this.addReceiverIds)
       this.sendMessageParam.platformParam[this.menuListActive.id] = {
         ...this.model
       }
-      let res = await sendMessage(this.sendMessageParam);
-      Message({
-        message: res.data || '服务器异常',
-        type: 'success'
+      let res = await sendMessage(this.sendMessageParam)
+      let that = this
+      const h = this.$createElement
+      this.$msgbox({
+        title: '结果',
+        message: h('p', null, [
+          h('span', null, '消息投递成功，请求号：' + res.data)
+        ]),
+        showCancelButton: true,
+        confirmButtonText: '查看日志',
+        cancelButtonText: '知道了',
+        beforeClose: (action, instance, done) => {
+          if (action === 'confirm') {
+            that.requestNo = res.data
+            this.showHisDetailDialog = true
+          }
+          done()
+        }
+      }).then(action => {
       })
+    },
+    doShowHisDetailDialog () {
+      this.requestNo = ''
+      this.showHisDetailDialog = true
     },
     initParam () {
       this.sendMessageParam = {
@@ -489,7 +525,7 @@ export default {
 .el-table__body-wrapper{
   overflow-x:visible !important;
 }
-.el-row {
+.setOfLayer .el-row {
   padding-bottom: 10px;
   padding-top: 10px;
   border-bottom: 1px solid #c3c6cc;
