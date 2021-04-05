@@ -174,3 +174,41 @@ export function queryHisDetail (data) {
     data: data
   })
 }
+
+export function listMessageType (platform) {
+  return fetch({
+    url: '/rpush-message-scheme/type?platform=' + platform,
+    method: 'get'
+  })
+}
+
+export function listMessageTypeField (messageType) {
+  return fetch({
+    url: '/rpush-message-scheme/field?messageType=' + messageType,
+    method: 'get'
+  })
+}
+
+export function listScheme (messageType) {
+  return fetch({
+    url: '/rpush-message-scheme/list?messageType=' + messageType,
+    method: 'get'
+  })
+}
+
+export function schemeDetail (schemeId) {
+  return fetch({
+    url: '/rpush-message-scheme/detail?schemeId=' + schemeId,
+    method: 'get'
+  })
+}
+
+export function updateOrSaveScheme (data, success) {
+  return fetch({
+    url: '/rpush-message-scheme/update',
+    method: 'post',
+    data: data
+  }).then(function (response) {
+    success && success(response)
+  })
+}

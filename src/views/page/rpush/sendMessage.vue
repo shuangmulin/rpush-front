@@ -35,8 +35,31 @@
         <!-- 右边表格 -->
         <div class="tm_c_table">
           <div class="setOfLayer">
-            <div class="features">
-              <span class="title">{{ menuListActive.name }}</span>
+            <div>
+              <el-row>
+                <el-col :span="16" style="padding: 12px 0">
+                  <span style="font-size: 16px">{{ menuListActive.name }}</span>
+                </el-col>
+                <el-col :span="8" style="padding-top: 4px">
+                  <el-dropdown @command="saveOrUpdateScheme">
+                    <span class="el-dropdown-link">
+                      <i class="el-icon-setting el-icon--left"></i>方案管理<i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown">
+                      <el-dropdown-item command="saveOther">另存为新方案</el-dropdown-item>
+                      <el-dropdown-item command="saveCurrent">保存当前方案</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                  <el-select size="small" clearable placeholder="请选择方案..." @change="schemeChange" v-model="selectedSchemeId">
+                    <el-option
+                      v-for="item in schemeList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id">
+                    </el-option>
+                  </el-select>
+                </el-col>
+              </el-row>
             </div>
             <!-- 备注说明 -->
             <div class="remarks_box">
@@ -44,11 +67,18 @@
             </div>
             <!-- 表格 -->
             <div class="table_layout fixedLayer">
-              <div class="setOfLayer">
+              <div class="setOfLayer send-param">
+                <el-row style="border-bottom: 0;padding-bottom: 0;">
+                  <el-col :span="24">
+                    <el-tabs v-model="selectedMessageType">
+                      <el-tab-pane v-for="item in messageTypes" :label="item.name" :name="item.id" :key="item.id"></el-tab-pane>
+                    </el-tabs>
+                  </el-col>
+                </el-row>
                 <el-row>
                   <el-col :span="24">
                     选择配置：
-                    <el-select v-model="model.configIds" multiple placeholder="请选择配置...">
+                    <el-select v-model="sendMessageParam.configIds" multiple placeholder="请选择配置...">
                       <el-option
                         v-for="item in configs"
                         :key="item.configId"
@@ -58,68 +88,71 @@
                     </el-select>
                   </el-col>
                 </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    选择分组：
-                    <el-select v-model="model.groupIds" multiple placeholder="请选择分组...">
-                      <el-option
-                        v-for="item in groups"
-                        :key="item.id"
-                        :label="item.groupName"
-                        :value="item.id">
-                      </el-option>
-                    </el-select>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="6">
-                    <el-input
-                      size="small"
-                      clearable
-                      v-model="inputReceiverId"
-                      ref="inputReceiverId"
-                      @keyup.enter.native="handleAddReceiverId"
-                      placeholder="输入并回车补充接收人...">
-                    </el-input>
-                  </el-col>
-                  <el-col :span="15">
-                    <el-button type="text" size="small" @click="handleClearAddReceiverId">清空</el-button>
-                  </el-col>
-                  <el-col :span="24">
-                    <el-tag
-                      style="margin-bottom: 2px; margin-left: 2px"
-                      v-for="item in addReceiverIds"
-                      size="small"
-                      :key="item"
-                      @close="handleAddReceiverIdClose(item)"
-                      closable
-                      :type="'info'">
-                      {{ item }}
-                    </el-tag>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <el-input
-                      size="small"
-                      type="text"
-                      clearable
-                      v-model="sendMessageParam.title"
-                      placeholder="输入消息标题...">
-                    </el-input>
-                  </el-col>
-                </el-row>
-                <el-row style="border-bottom: 0">
-                  <el-col :span="24">
-                    <el-input
-                      type="textarea"
-                      clearable
-                      :autosize="{ minRows: 15, maxRows: 100}"
-                      v-model="sendMessageParam.content"
-                      placeholder="输入消息正文...">
-                    </el-input>
-                  </el-col>
-                </el-row>
+                <div v-for="item in selectedMessageTypeFields">
+                  <el-row v-if="item.type === 'RECEIVER_GROUP'">
+                    <el-col :span="24">
+                      选择分组：
+                      <el-select v-model="sendMessageParam.param[item.key]" multiple placeholder="请选择分组...">
+                        <el-option
+                          v-for="item in groups"
+                          :key="item.id"
+                          :label="item.groupName"
+                          :value="item.id">
+                        </el-option>
+                      </el-select>
+                    </el-col>
+                  </el-row>
+                  <el-row v-if="item.type === 'RECEIVER'">
+                    <el-col :span="6">
+                      <el-input
+                        size="small"
+                        clearable
+                        v-model="inputReceiverId"
+                        ref="inputReceiverId"
+                        @keyup.enter.native="handleAddReceiverId(item)"
+                        placeholder="输入并回车补充接收人...">
+                      </el-input>
+                    </el-col>
+                    <el-col :span="15">
+                      <el-button type="text" size="small" @click="handleClearAddReceiverId(item)">清空</el-button>
+                      <span v-show="false">{{sendMessageParam.param[item.key]}}</span>
+                    </el-col>
+                    <el-col :span="24">
+                      <el-tag
+                        style="margin-bottom: 2px; margin-left: 2px"
+                        v-for="addId in sendMessageParam.param[item.key]"
+                        size="small"
+                        :key="addId"
+                        @close="handleAddReceiverIdClose(item, addId)"
+                        closable
+                        :type="'info'">
+                        {{ addId }}
+                      </el-tag>
+                    </el-col>
+                  </el-row>
+                  <el-row v-if="item.type === 'STRING'">
+                    <el-col :span="24">
+                      <el-input
+                        size="small"
+                        type="text"
+                        clearable
+                        v-model="sendMessageParam.param[item.key]"
+                        :placeholder="item.description || item.name">
+                      </el-input>
+                    </el-col>
+                  </el-row>
+                  <el-row v-if="item.type === 'TEXTAREA'">
+                    <el-col :span="24">
+                      <el-input
+                        type="textarea"
+                        clearable
+                        :autosize="{ minRows: 15, maxRows: 100}"
+                        v-model="sendMessageParam.param[item.key]"
+                        :placeholder="item.description || item.name">
+                      </el-input>
+                    </el-col>
+                  </el-row>
+                </div>
                 <el-row style="border-bottom: 0;border-top: 1px solid #c3c6cc; position: -webkit-sticky;position: sticky;bottom: 0; background: white;">
                   <el-col :span="24">
                     <el-button size="small" type="primary" @click="sendMessage">发送</el-button>
@@ -144,7 +177,12 @@ import {
   platformList,
   queryConfig,
   sendMessage,
-  queryGroup
+  queryGroup,
+  listMessageType,
+  listMessageTypeField,
+  listScheme,
+  schemeDetail,
+  updateOrSaveScheme
 } from '@/api/rpush'
 
 import {Message} from "element-ui";
@@ -163,27 +201,18 @@ export default {
       groups: [],
       inputReceiverId: '',// 当前新增的接收人
       addReceiverIds: [], // 新增的接收人
-      model: {
-        configIds: [],
-        groupIds: [],
-        sendTos: []
-      },
       // 发送消息参数
       sendMessageParam: {
-        platformParam: {
-          /*
-          EMAIL: {
-            configIds: [],
-            sendTos: [],
-            param: {}
-          }
-          */
-        },
-        title: '',
-        content: ''
+        configIds: [],
+        param: {}
       },
+      selectedMessageType: 0, // 选择的消息类型
+      selectedMessageTypeFields: [], // 选择的消息类型的所有字段
       showHisDetailDialog: false,
-      requestNo: ''
+      requestNo: '',
+      messageTypes: [],
+      schemeList: [],
+      selectedSchemeId: null
     }
   },
   async mounted () {
@@ -193,34 +222,29 @@ export default {
     closeHisDetail () {
       this.showHisDetailDialog = false
     },
-    handleAddReceiverId () {
-      this.$nextTick(()=>{
-        this.$refs.inputReceiverId.focus()
-      })
+    handleAddReceiverId (item) {
       let reg = new RegExp(this.menuListActive.validateReg)
       let validate = reg.test(this.inputReceiverId)
       if (!validate) {
         Message.error("格式校验不正确")
       }
-      if (!this.inputReceiverId || this.addReceiverIds.indexOf(this.inputReceiverId) >= 0 || !validate) {
+      this.sendMessageParam.param[item.key] = this.sendMessageParam.param[item.key] || []
+      if (!this.inputReceiverId || this.sendMessageParam.param[item.key].indexOf(this.inputReceiverId) >= 0 || !validate) {
         return;
       }
-      this.addReceiverIds.push(this.inputReceiverId)
+      this.sendMessageParam.param[item.key].push(this.inputReceiverId)
       this.inputReceiverId = ''
     },
-    handleClearAddReceiverId () {
-      this.$nextTick(()=>{
-        this.$refs.inputReceiverId.focus()
-      })
-      this.addReceiverIds = []
+    handleClearAddReceiverId (item) {
+      this.sendMessageParam.param[item.key] = []
+      this.$forceUpdate()
     },
-    handleAddReceiverIdClose (item) {
-      this.$nextTick(()=>{
-        this.$refs.inputReceiverId.focus()
-      })
-      this.addReceiverIds.splice(this.addReceiverIds.indexOf(item), 1);
+    handleAddReceiverIdClose (item, addId) {
+      this.sendMessageParam.param[item.key] = this.sendMessageParam.param[item.key] || []
+      this.sendMessageParam.param[item.key].splice(this.sendMessageParam.param[item.key].indexOf(addId), 1)
+      this.$forceUpdate()
     },
-    routeTo (platform) {
+    async routeTo (platform) {
       if (platform) {
         for (const m of this.menuList) {
           if (m.id === platform) {
@@ -230,9 +254,13 @@ export default {
       } else {
         this.menuListActive = this.menuList[0] // 默认显示第一个平台的数据
       }
-      this.queryConfig()
-      this.queryGroup()
-      this.initParam()
+      await this.queryConfig()
+      await this.queryGroup()
+      await this.initParam()
+      let typeRes = await listMessageType(this.menuListActive.id)
+      this.messageTypes = typeRes.data
+      this.selectedMessageType = this.messageTypes[0].id // 默认选择第一个消息类型
+      await this.changeMessageType()
     },
     // 获取平台列表
     async platformList () {
@@ -247,10 +275,10 @@ export default {
         pageSize: 2147483647
       });
       this.configs = configRes.data.pagination.dataList
-      this.model.configIds = []
+      this.sendMessageParam.configIds = []
       for (let i = 0; i < this.configs.length; i++) {
         if (this.configs[i].defaultFlag) {
-          this.model.configIds.push(this.configs[i].configId)
+          this.sendMessageParam.configIds.push(this.configs[i].configId)
         }
       }
     },
@@ -258,19 +286,20 @@ export default {
       let groupRes = await queryGroup(this.menuListActive.id, {
         pageSize: 2147483647
       })
-      this.model.groupIds = []
       this.groups = groupRes.data.dataList
     },
     async sendMessage () {
-      if (!this.model.configIds.length) {
+      if (!this.sendMessageParam.configIds.length) {
         Message.error('请选择至少一个配置')
         return
       }
-      this.model.sendTos.push.apply(this.model.sendTos, this.addReceiverIds)
-      this.sendMessageParam.platformParam[this.menuListActive.id] = {
-        ...this.model
+      let param = {}
+      param[this.selectedMessageType] = {
+        ...this.sendMessageParam
       }
-      let res = await sendMessage(this.sendMessageParam)
+      let res = await sendMessage({
+        messageParam: param
+      })
       let that = this
       const h = this.$createElement
       this.$msgbox({
@@ -296,27 +325,43 @@ export default {
       this.showHisDetailDialog = true
     },
     initParam () {
-      this.sendMessageParam = {
-        platformParam: {
-          /*
-          EMAIL: {
-            configIds: [],
-            sendTos: [],
-            param: {}
-          }
-          */
-        },
-        title: '',
-        content: ''
-      }
+      this.sendMessageParam.param = {}
 
       this.inputReceiverId = ''// 当前新增的接收人
       this.addReceiverIds = [] // 新增的接收人
-      this.model = {
-        configIds: [],
-        groupIds: [],
-        sendTos: []
+    },
+    // 切换消息类型
+    async changeMessageType () {
+      let fieldRes = await listMessageTypeField(this.selectedMessageType)
+      this.selectedMessageTypeFields = fieldRes.data
+
+      // 方案
+      let listSchemeRes = await listScheme(this.selectedMessageType)
+      this.schemeList = listSchemeRes.data
+    },
+    async schemeChange (scheme) {
+      let res = await schemeDetail(scheme)
+      let param = res.data.param
+      if (param) {
+        this.sendMessageParam = JSON.parse(param)
       }
+    },
+    async saveOrUpdateScheme (command) {
+      let that = this
+      this.$prompt('请输入方案名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(({ value }) => {
+        updateOrSaveScheme({
+          id: command === 'saveOther' ? null : that.selectedSchemeId, // 如果是另存为，不传id给后台
+          name: value,
+          messageType: that.selectedMessageType,
+          param: JSON.stringify(that.sendMessageParam)
+        }, function (res) {
+          that.sendMessageParam = res.data
+        })
+      }).catch(() => {
+      });
     }
   }
 }
@@ -428,7 +473,7 @@ export default {
           justify-content: space-between;
           align-items: center;
           .title {
-            font-size:16px;
+            font-size:20px;
             font-weight:500;
             color:rgba(29,35,52,1);
           }
@@ -449,7 +494,7 @@ export default {
           }
         }
         .remarks_box {
-          padding: 10px 0;
+          padding: 5px 0;
           font-size:12px;
           font-weight:400;
           color:rgba(101,105,117,1);
@@ -525,18 +570,18 @@ export default {
 .el-table__body-wrapper{
   overflow-x:visible !important;
 }
-.setOfLayer .el-row {
+.send-param .el-row {
   padding-bottom: 10px;
   padding-top: 10px;
   border-bottom: 1px solid #c3c6cc;
 }
 </style>
 <style scoped>
-.el-row>>>.el-textarea__inner {
+.send-param>>>.el-textarea__inner {
   border: 0;
   resize: none;
 }
-.el-row>>>.el-input__inner {
+.send-param>>>.el-input__inner {
   border: 0;
 }
 </style>
