@@ -48,14 +48,36 @@
                     <el-dropdown-menu slot="dropdown">
                       <el-dropdown-item command="saveOther">另存为新方案</el-dropdown-item>
                       <el-dropdown-item command="saveCurrent">保存当前方案</el-dropdown-item>
+                      <el-dropdown-item command="manageScheme">管理方案</el-dropdown-item>
                     </el-dropdown-menu>
+                    <!-- 管理方案弹窗 -->
+                    <el-dialog title="管理方案" :visible.sync="dialogManageSchemeVisible">
+                      <el-table :data="schemeList">
+                        <el-table-column property="name" label="方案名称" width="200"></el-table-column>
+                        <el-table-column
+                          label="操作">
+                          <template slot-scope="scope">
+                            <el-popconfirm
+                              confirm-button-text='确定'
+                              cancel-button-text='取消'
+                              icon="el-icon-info"
+                              icon-color="red"
+                              @onConfirm="deleteScheme(scope.row.id)"
+                              title="确定要删除这个方案吗？"
+                            >
+                              <el-button type="danger" size="small" slot="reference">删除</el-button>
+                            </el-popconfirm>
+                          </template>
+                        </el-table-column>
+                      </el-table>
+                    </el-dialog>
                   </el-dropdown>
-                  <el-select size="small" clearable placeholder="请选择方案..." @change="schemeChange" v-model="selectedSchemeId">
+                  <el-select size="small" clearable placeholder="请选择方案..." @change="schemeChange" v-model="selectedScheme" value-key="id">
                     <el-option
                       v-for="item in schemeList"
                       :key="item.id"
                       :label="item.name"
-                      :value="item.id">
+                      :value="item">
                     </el-option>
                   </el-select>
                 </el-col>
@@ -86,6 +108,11 @@
                         :value="item.configId">
                       </el-option>
                     </el-select>
+                  </el-col>
+                </el-row>
+                <el-row>
+                  <el-col :span="24">
+                    <multiInput :headers="headers"/>
                   </el-col>
                 </el-row>
                 <div v-for="item in selectedMessageTypeFields">
@@ -182,7 +209,8 @@ import {
   listMessageTypeField,
   listScheme,
   schemeDetail,
-  updateOrSaveScheme
+  updateOrSaveScheme,
+  deleteScheme
 } from '@/api/rpush'
 
 import {Message} from "element-ui";
@@ -191,9 +219,24 @@ export default {
   name: 'groupManagement',
   components: {
     hisDetailDialog: () => import('./component/hisDetailDialog.vue'),
+    multiInput: () => import('./component/multiInput.vue'),
   },
   data() {
     return {
+      headers: [
+        {
+          key: "title",
+          label: "标题"
+        },
+        {
+          key: "description",
+          label: "描述"
+        },
+        {
+          key: "url",
+          label: "url"
+        }
+      ],
       keyword: '',
       menuListActive: {},
       menuList: [],
@@ -206,13 +249,23 @@ export default {
         configIds: [],
         param: {}
       },
-      selectedMessageType: 0, // 选择的消息类型
+      selectedMessageType: null, // 选择的消息类型
       selectedMessageTypeFields: [], // 选择的消息类型的所有字段
       showHisDetailDialog: false,
       requestNo: '',
       messageTypes: [],
       schemeList: [],
-      selectedSchemeId: null
+      selectedScheme: null,
+      dialogManageSchemeVisible: false,
+    }
+  },
+  watch: {
+    // 切换消息类型
+    selectedMessageType (val) {
+      if (!val || val === '0') {
+        return
+      }
+      this.changeMessageType()
     }
   },
   async mounted () {
@@ -261,6 +314,14 @@ export default {
       this.messageTypes = typeRes.data
       this.selectedMessageType = this.messageTypes[0].id // 默认选择第一个消息类型
       await this.changeMessageType()
+    },
+    // 刷新方案
+    refreshScheme (success) {
+      let that = this
+      listScheme(this.selectedMessageType, (res) => {
+        that.schemeList = res.data
+        success && success()
+      })
     },
     // 获取平台列表
     async platformList () {
@@ -335,30 +396,52 @@ export default {
       let fieldRes = await listMessageTypeField(this.selectedMessageType)
       this.selectedMessageTypeFields = fieldRes.data
 
-      // 方案
-      let listSchemeRes = await listScheme(this.selectedMessageType)
-      this.schemeList = listSchemeRes.data
+      this.selectedScheme = null
+      this.refreshScheme()
+      this.initParam()
     },
     async schemeChange (scheme) {
-      let res = await schemeDetail(scheme)
+      if (!scheme) {
+        // 清空方案
+        this.initParam()
+        return
+      }
+      let res = await schemeDetail(scheme.id)
       let param = res.data.param
       if (param) {
         this.sendMessageParam = JSON.parse(param)
       }
     },
+    // 删除方案
+    async deleteScheme (schemeId) {
+      debugger
+      await deleteScheme(schemeId)
+      if (this.selectedScheme && schemeId === this.selectedScheme.id) {
+        // 刚好删了现在选择的方案
+        this.selectedScheme = null
+      }
+      this.refreshScheme()
+    },
     async saveOrUpdateScheme (command) {
+      if (command === 'manageScheme') {
+        this.dialogManageSchemeVisible = true
+        return
+      }
       let that = this
       this.$prompt('请输入方案名称', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
+        inputValue: command === 'saveOther' || !this.selectedScheme ? null : this.selectedScheme.name
       }).then(({ value }) => {
         updateOrSaveScheme({
-          id: command === 'saveOther' ? null : that.selectedSchemeId, // 如果是另存为，不传id给后台
+          id: command === 'saveOther' || !this.selectedScheme ? null : that.selectedScheme.id, // 如果是另存为，不传id给后台
           name: value,
           messageType: that.selectedMessageType,
           param: JSON.stringify(that.sendMessageParam)
         }, function (res) {
-          that.sendMessageParam = res.data
+          that.refreshScheme(() => {
+            that.selectedScheme = res.data
+          })
         })
       }).catch(() => {
       });

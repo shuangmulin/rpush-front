@@ -189,10 +189,13 @@ export function listMessageTypeField (messageType) {
   })
 }
 
-export function listScheme (messageType) {
+// --------------方案管理-------------
+export function listScheme (messageType, success) {
   return fetch({
     url: '/rpush-message-scheme/list?messageType=' + messageType,
     method: 'get'
+  }).then(function (response) {
+    success && success(response)
   })
 }
 
@@ -200,6 +203,13 @@ export function schemeDetail (schemeId) {
   return fetch({
     url: '/rpush-message-scheme/detail?schemeId=' + schemeId,
     method: 'get'
+  })
+}
+
+export function deleteScheme (schemeId) {
+  return fetch({
+    url: '/rpush-message-scheme?schemeId=' + schemeId,
+    method: 'delete'
   })
 }
 
