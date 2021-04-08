@@ -110,12 +110,12 @@
                     </el-select>
                   </el-col>
                 </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <multiInput :headers="headers"/>
-                  </el-col>
-                </el-row>
                 <div v-for="item in selectedMessageTypeFields">
+                  <el-row v-if="item.type === 'MULTI_OBJ_INPUT'">
+                    <el-col :span="24">
+                      <multiObjInput :headers="item.multiObjFields" @change="multiObjChange($event, item.key)" :title="item.name" v-model="sendMessageParam.param[item.key]"/>
+                    </el-col>
+                  </el-row>
                   <el-row v-if="item.type === 'RECEIVER_GROUP'">
                     <el-col :span="24">
                       选择分组：
@@ -142,7 +142,7 @@
                     </el-col>
                     <el-col :span="15">
                       <el-button type="text" size="small" @click="handleClearAddReceiverId(item)">清空</el-button>
-                      <span v-show="false">{{sendMessageParam.param[item.key]}}</span>
+                      <span v-show="false">{{ sendMessageParam.param[item.key] }}</span>
                     </el-col>
                     <el-col :span="24">
                       <el-tag
@@ -219,24 +219,10 @@ export default {
   name: 'groupManagement',
   components: {
     hisDetailDialog: () => import('./component/hisDetailDialog.vue'),
-    multiInput: () => import('./component/multiInput.vue'),
+    multiObjInput: () => import('./component/multiObjInput.vue'),
   },
   data() {
     return {
-      headers: [
-        {
-          key: "title",
-          label: "标题"
-        },
-        {
-          key: "description",
-          label: "描述"
-        },
-        {
-          key: "url",
-          label: "url"
-        }
-      ],
       keyword: '',
       menuListActive: {},
       menuList: [],
@@ -272,6 +258,10 @@ export default {
     await this.platformList()
   },
   methods: {
+    multiObjChange ($event, key) {
+      this.sendMessageParam.param[key] = $event
+      this.$forceUpdate()
+    },
     closeHisDetail () {
       this.showHisDetailDialog = false
     },

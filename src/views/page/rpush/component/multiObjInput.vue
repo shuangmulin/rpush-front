@@ -18,7 +18,7 @@
                          width="50"/>
         <el-table-column
           v-for="item in headers"
-          width="180">
+          width="130">
           <template slot-scope="scope">
             <el-input
               placeholder="请输入..."
@@ -37,7 +37,7 @@
         </el-table-column>
       </el-table>
       <el-table
-        :data="tableData"
+        :data="value"
         height="150"
         border
         stripe
@@ -53,7 +53,8 @@
           v-for="item in headers"
           :prop="item.key"
           :label="item.label"
-          width="180">
+          show-overflow-tooltip
+          width="130">
         </el-table-column>
         <el-table-column
           label="操作"
@@ -70,7 +71,7 @@
 import { Message } from 'element-ui';
 
 export default {
-  name: 'multiInput',
+  name: 'multiObjInput',
   props: {
     title: {
       type: String,
@@ -79,13 +80,16 @@ export default {
     headers: {
       type: Array,
       default: () => []
+    },
+    value: {
+      type: Array,
+      default: () => []
     }
   },
   data () {
     return {
       inputData: {},
-      inputTableData: [],
-      tableData: []
+      inputTableData: []
     }
   },
   mounted () {
@@ -106,7 +110,7 @@ export default {
         });
         return
       }
-      if (this.indexOf(this.tableData, this.inputData) > -1) {
+      if (this.indexOf(this.value, this.inputData) > -1) {
         Message.closeAll()
         this.$message({
           showClose: true,
@@ -115,15 +119,17 @@ export default {
         });
         return
       }
-      this.tableData.push(this.inputData)
+      this.value.push(this.inputData)
       this.inputData = {}
+      this.onChange()
     },
     deleteItem (row) {
-      let indexOf = this.indexOf(this.tableData, row)
+      let indexOf = this.indexOf(this.value, row)
       if (indexOf === -1) {
         return
       }
-      this.tableData.splice(indexOf, 1)
+      this.value.splice(indexOf, 1)
+      this.onChange()
     },
     indexOf (arr, obj) {
       out:for (let i = 0; i < arr.length; i++) {
@@ -139,6 +145,9 @@ export default {
         return i
       }
       return -1;
+    },
+    onChange () {
+      this.$emit('change', this.value)
     }
   }
 }
