@@ -37,14 +37,14 @@ export default [
         },
         component: () => import('@/views/page/rpush/groupManagement')
       },
-      {
-        path: '/templateManagement',
-        name: 'templateManagement',
-        meta: {
-          title: '模板管理'
-        },
-        component: () => import('@/views/page/rpush/templateManagement')
-      },
+      // {
+      //   path: '/templateManagement',
+      //   name: 'templateManagement',
+      //   meta: {
+      //     title: '模板管理'
+      //   },
+      //   component: () => import('@/views/page/rpush/templateManagement')
+      // },
       {
         path: '/sendMessage',
         name: 'sendMessage',

@@ -129,6 +129,24 @@
                       </el-select>
                     </el-col>
                   </el-row>
+                  <el-row v-if="item.type === 'BOOLEAN'">
+                    <el-col :span="24">
+                      <el-checkbox v-model="sendMessageParam.param[item.key]">{{ item.description || item.name }}</el-checkbox>
+                    </el-col>
+                  </el-row>
+                  <el-row v-if="item.type === 'SELECT'">
+                    <el-col :span="24">
+                      {{item.name}}：
+                      <el-select size="small" placeholder="请选择..." v-model="sendMessageParam.param[item.key]">
+                        <el-option
+                          v-for="option in item.options"
+                          :key="option.id"
+                          :label="option.name"
+                          :value="option.id">
+                        </el-option>
+                      </el-select>
+                    </el-col>
+                  </el-row>
                   <el-row v-if="item.type === 'RECEIVER'">
                     <el-col :span="6">
                       <el-input
