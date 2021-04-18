@@ -27,7 +27,7 @@ service.interceptors.request.use(
   config => {
     let token = localStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = token
+        config.headers.Authorization = token
       console.log('interceptors config=', config)
     }
     loading = Loading.service({
@@ -36,6 +36,7 @@ service.interceptors.request.use(
     return config
   },
   error => {
+    debugger
     // Do something with request error
     console.log(error) // for debug
   }
@@ -46,6 +47,12 @@ service.interceptors.response.use(
   response => {
     loading.close()
     const res = response.data
+    let accessToken = res.access_token
+    if (accessToken) {
+      localStorage.setItem("token", "Bearer " + accessToken)
+      return res
+
+    }
     if (res.code === 401) {
       MessageBox.alert('登录信息过期，请重新登录', '提示信息', {
         confirmButtonText: '确定',
@@ -64,6 +71,33 @@ service.interceptors.response.use(
         type: 'error'
       })
       return res
+    }
+  },
+  async error => {
+    loading.close()
+    try {
+      if (error && error.response) {
+        switch (error.response.status) {
+          case 401:
+            MessageBox.alert('登录信息过期，请重新登录', '提示信息', {
+              confirmButtonText: '确定',
+              callback: action => {
+                router.replace({
+                  path: '/login'
+                })
+              }
+            })
+            return res
+          default:
+            console.error(error);
+            return error;
+        }
+      } else {
+        console.error(error);
+        return error;
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 )

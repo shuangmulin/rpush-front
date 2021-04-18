@@ -8,8 +8,8 @@
         <div>Rpush</div>
       </h3>
       <div id="admin_login" class="admin-login">
-        <input type="text" style="position: absolute; top: -999px" />
-        <input type="password" style="position: absolute; top: -999px" />
+<!--        <input type="text" style="position: absolute; top: -999px" />-->
+<!--        <input type="password" style="position: absolute; top: -999px" />-->
         <div class="admin">
           <p>登录账号</p>
           <p>
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-
+import {login} from '@/api/rpush'
 export default {
   name: 'operationLogin',
   data () {
@@ -60,32 +60,35 @@ export default {
   },
   methods: {
     // 点击登录
-    handleLogin () {
-      // if (!this.name && !this.password) {
-      //   this.$message({
-      //     showClose: true,
-      //     message: '登录账号和密码不能为空！',
-      //     type: 'error'
-      //   })
-      //   return
-      // }
-      // if (!this.name) {
-      //   this.$message({
-      //     showClose: true,
-      //     message: '登录账号不能为空！',
-      //     type: 'error'
-      //   })
-      //   return
-      // }
-      // if (!this.password) {
-      //   this.$message({
-      //     showClose: true,
-      //     message: '用户密码不能为空！',
-      //     type: 'error'
-      //   })
-      //   return
-      // }
-      this.loginLoading = true
+    async handleLogin () {
+      if (!this.name && !this.password) {
+        this.$message({
+          showClose: true,
+          message: '登录账号和密码不能为空！',
+          type: 'error'
+        })
+        return
+      }
+      if (!this.name) {
+        this.$message({
+          showClose: true,
+          message: '登录账号不能为空！',
+          type: 'error'
+        })
+        return
+      }
+      if (!this.password) {
+        this.$message({
+          showClose: true,
+          message: '用户密码不能为空！',
+          type: 'error'
+        })
+        return
+      }
+      await login({
+        client_id: this.name,
+        client_secret: this.password
+      })
       this.$router.replace({ name: 'configManagement' })
     },
     enterKey (event) {

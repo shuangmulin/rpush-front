@@ -1,5 +1,15 @@
 import fetch from '@/utils/rpush_fetch'
 
+export function login (data) {
+  data.grant_type = 'client_credentials'
+  data.scope = 'all'
+  return fetch({
+    url: '/oauth/token',
+    method: 'get',
+    params: data
+  })
+}
+
 /*
  * @Description: 查询平台
  */
