@@ -168,6 +168,15 @@ export function deleteReceiver (id, success) {
   })
 }
 
+export function importReceiver (formData, success) {
+  // debugger
+  fetch.post('/rpush-template-receiver/import', formData, {
+    'Content-Type': 'multipart/form-data'
+  }).then(res => {
+    success && success(res)
+  })
+}
+
 // --------------发消息-------------
 export function sendMessage (data) {
   return fetch({
@@ -230,5 +239,25 @@ export function updateOrSaveScheme (data, success) {
     data: data
   }).then(function (response) {
     success && success(response)
+  })
+}
+
+// --------------下载-------------
+export function download (path, filename, params) {
+  fetch({
+    method: 'get',
+    url: '/rpush-template-receiver/download/' + path,
+    data: params,
+    responseType: 'arraybuffer'
+  }).then(res => {
+    const hrefUrl = window.URL.createObjectURL(new Blob([res.data]))
+    const a = window.document.createElement('a')
+    a.setAttribute('href', hrefUrl)
+    a.setAttribute('download', filename || path)
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    // 释放blob URL地址
+    window.URL.revokeObjectURL(hrefUrl)
   })
 }

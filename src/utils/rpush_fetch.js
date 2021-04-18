@@ -46,6 +46,11 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     loading.close()
+    // 处理excel文件
+    if (response.config.url.indexOf("download") > 0) {
+      return response
+    }
+
     const res = response.data
     let accessToken = res.access_token
     if (accessToken) {

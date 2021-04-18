@@ -1,6 +1,6 @@
 <template>
   <div class="multi-input">
-    <el-card class="box-card">
+    <el-card shadow="never" class="box-card">
       <div slot="header">
         <span>{{ title }}</span>
       </div>

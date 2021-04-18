@@ -2,7 +2,37 @@
   <div class="taskManagement">
     <!-- 头部 -->
     <div class="taskManagement_header">
-      <div class="title">接收人管理</div>
+      <div class="title">
+        <el-row>
+          <el-col :span="22">接收人管理</el-col>
+          <el-col :span="2"><el-button type="text" @click="importDialog = true">从Excel导入</el-button></el-col>
+        </el-row>
+        <el-dialog width="40%" :visible.sync="importDialog">
+          <div class="importDialog-content">
+            <el-upload ref="upload"
+                       :limit="1"
+                       :auto-upload="false"
+                       drag
+                       :http-request="importExcel"
+                       accept='.xls,.xlsx'
+                       action="customize">
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">将文件拖到此处，或
+                <em>点击上传</em>
+              </div>
+            </el-upload>
+          </div>
+          <span slot="footer" class="importDialog-footer">
+            <span class="importDialog-template-download" @click="downloadTemplate">
+              <i class="el-icon-download"></i><a>下载excel模板</a>
+            </span>
+            <span>
+            <el-button size="small" @click="importDialog = false">取 消</el-button>
+            <el-button type="primary" size="small" @click="submitImport">确定导入</el-button>
+            </span>
+          </span>
+        </el-dialog>
+      </div>
     </div>
     <!-- 内容 -->
     <div class="taskManagement_container">
@@ -116,8 +146,11 @@ import {
   platformList,
   queryReceiver,
   deleteReceiver,
-  queryGroup
+  queryGroup,
+  importReceiver,
+  download
 } from '@/api/rpush'
+import {Message} from 'element-ui'
 
 export default {
   name: 'receiverManagement',
@@ -161,13 +194,43 @@ export default {
       isReceiverDailog: false,
       deleteName: '',
       deleteDialogVisible: false,
-      isReceiver: true
+      isReceiver: true,
+      importDialog: false
     }
   },
   async mounted () {
     await this.platformList()
   },
   methods: {
+    downloadTemplate () {
+      download('接收人导入模板.xlsx')
+    },
+    importExcel (params) {
+      const _file = params.file;
+      const isLt2M = _file.size / 1024 / 1024 < 2;
+
+      // 通过 FormData 对象上传文件
+      let formData = new FormData();
+      formData.append("platform", this.menuListActive.id);
+      formData.append("file", _file);
+
+      if (!isLt2M) {
+        this.$message.error("请上传2M以下的.xlsx文件");
+        return false;
+      }
+
+      // 发起请求
+      importReceiver(formData, function (res) {
+        Message({
+          message: '导入成功',
+          type: 'success'
+        })
+        this.importDialog = false
+      })
+    },
+    submitImport() {
+      this.$refs.upload.submit();
+    },
     doSearch () {
       this.queryReceiver()
     },
@@ -507,5 +570,19 @@ export default {
 .el-table__header-wrapper,.el-table__body-wrapper,.el-table__footer-wrapper{overflow:visible;}
 .el-table__body-wrapper{
   overflow-x:visible !important;
+}
+
+.importDialog-content {
+  display: flex;
+  justify-content: center;
+}
+.importDialog-footer {
+  display: flex;
+  justify-content: space-between;
+}
+.importDialog-template-download {
+  font-size: 13px;
+  color: #666666;
+  cursor: pointer;
 }
 </style>
