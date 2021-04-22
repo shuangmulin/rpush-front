@@ -1,11 +1,24 @@
 <template>
   <div class="taskManagement">
     <!-- 头部 -->
+    <cp-user-import-dialog :dialogVisible.sync="cpUserImportDialogVisible" :platform="menuListActive.id" v-if="cpUserImportDialogVisible"></cp-user-import-dialog>
     <div class="taskManagement_header">
       <div class="title">
         <el-row>
           <el-col :span="22">接收人管理</el-col>
-          <el-col :span="2"><el-button type="text" @click="importDialog = true">从Excel导入</el-button></el-col>
+          <el-col :span="2">
+            <div>
+              <el-dropdown trigger="click" size="small" style="line-height: 10px">
+                <span class="el-dropdown-link">
+                  导入接收人<i class="el-icon-arrow-down el-icon--right"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item icon="el-icon-s-release" @click.native="importDialog = true">从Excel导入</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-chat-round" v-if="menuListActive.id === 'WECHAT_WORK_AGENT'" type="text" @click.native="cpUserImportDialogVisible = true">从企业微信导入</el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </div>
+          </el-col>
         </el-row>
         <el-dialog width="40%" :visible.sync="importDialog">
           <div class="importDialog-content">
@@ -156,6 +169,7 @@ export default {
   name: 'receiverManagement',
   components: {
     receiverDialog: () => import('./component/receiverDialog.vue'),
+    cpUserImportDialog: () => import('./component/wechat/importDialog.vue'),
     nfTypeFilterInput: () => import('@/components/nf-type-filter-input.vue')
   },
   data () {
@@ -195,7 +209,8 @@ export default {
       deleteName: '',
       deleteDialogVisible: false,
       isReceiver: true,
-      importDialog: false
+      importDialog: false,
+      cpUserImportDialogVisible: false
     }
   },
   async mounted () {
@@ -371,6 +386,13 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.el-dropdown-link {
+  cursor: pointer;
+  color: #409EFF;
+}
+.el-icon-arrow-down {
+  font-size: 12px;
+}
 .taskManagement {
   height: 100%;
   display: flex;

@@ -169,11 +169,26 @@ export function deleteReceiver (id, success) {
 }
 
 export function importReceiver (formData, success) {
-  // debugger
   fetch.post('/rpush-template-receiver/import', formData, {
     'Content-Type': 'multipart/form-data'
   }).then(res => {
     success && success(res)
+  })
+}
+
+export function listDepartment (data) {
+  return fetch({
+    url: '/wechat/cp/department',
+    method: 'get',
+    params: data
+  })
+}
+
+export function cpImportReceiver (data) {
+  return fetch({
+    url: '/wechat/cp/import',
+    method: 'post',
+    data: data
   })
 }
 
