@@ -1,5 +1,5 @@
 <template>
-  <el-dialog width="75%" title="消息记录详情" :visible.sync="dialogVisible" top="10vh" @close="doClose()">
+  <el-dialog width="75%" title="消息记录详情" :visible.sync="dialogVisible" top="10vh" @close="doClose()" append-to-body>
     <div class="el-dialog-div">
       <el-form :inline="true" class="demo-form-inline">
         <el-form-item label="平台">

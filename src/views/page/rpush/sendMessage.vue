@@ -200,7 +200,8 @@
                 </div>
                 <el-row style="border-bottom: 0;border-top: 1px solid #c3c6cc; position: -webkit-sticky;position: sticky;bottom: 0; background: white;">
                   <el-col :span="24">
-                    <el-button size="small" type="primary" @click="sendMessage">发送</el-button>
+                    <el-button size="mini" type="primary" @click="sendMessage">发送</el-button>
+                    <el-button size="mini" plain @click="openAddTaskDialog">定时发送</el-button>
                   </el-col>
                 </el-row>
               </div>
@@ -215,6 +216,7 @@
       :platform="menuListActive.id"
       @closed="closeHisDetail"
     />
+    <task-dialog :dialogVisible.sync="taskVisible" v-if="isTaskDialog" :paramProps="taskParamProps" @handleSave="handleSaveTask"></task-dialog>
   </div>
 </template>
 <script>
@@ -236,6 +238,7 @@ import {Message} from "element-ui";
 export default {
   name: 'groupManagement',
   components: {
+    taskDialog: () => import('./component/taskDialog.vue'),
     hisDetailDialog: () => import('./component/hisDetailDialog.vue'),
     multiObjInput: () => import('./component/multiObjInput.vue'),
   },
@@ -261,6 +264,9 @@ export default {
       schemeList: [],
       selectedScheme: null,
       dialogManageSchemeVisible: false,
+      taskVisible: false,
+      isTaskDialog: false,
+      taskParamProps: null
     }
   },
   watch: {
@@ -270,6 +276,11 @@ export default {
         return
       }
       this.changeMessageType()
+    },
+    taskVisible (val) {
+      if (!val) {
+        this.isTaskDailog = false
+      }
     }
   },
   async mounted () {
@@ -453,6 +464,21 @@ export default {
         })
       }).catch(() => {
       });
+    },
+    handleSaveTask () {
+
+    },
+    openAddTaskDialog () {
+      this.taskVisible = true
+      this.isTaskDialog = true
+      let param = {}
+      debugger
+      param[this.selectedMessageType] = {
+        ...this.sendMessageParam
+      }
+      this.taskParamProps = {
+        messageParam: param
+      }
     }
   }
 }

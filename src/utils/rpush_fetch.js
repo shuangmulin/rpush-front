@@ -28,7 +28,6 @@ service.interceptors.request.use(
     let token = localStorage.getItem('token')
     if (token) {
         config.headers.Authorization = token
-      console.log('interceptors config=', config)
     }
     loading = Loading.service({
       fullscreen: true

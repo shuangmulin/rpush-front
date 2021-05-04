@@ -52,6 +52,14 @@ export default [
           title: '发消息'
         },
         component: () => import('@/views/page/rpush/sendMessage')
+      },
+      {
+        path: '/task',
+        name: 'task',
+        meta: {
+          title: '定时任务'
+        },
+        component: () => import('@/views/page/rpush/taskManagement')
       }
     ]
   }
